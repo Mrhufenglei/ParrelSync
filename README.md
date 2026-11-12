@@ -32,6 +32,7 @@ After Unity 2019.3.4f1, Unity 2020.1a21, which support path query parameter of g
 
 ```
 https://github.com/Mrhufenglei/ParrelSync.git?path=/ParrelSync
+https://github.com/Mrhufenglei/ParrelSync.git?path=/ParrelSync#v1.1.1
 ```  
 
   
