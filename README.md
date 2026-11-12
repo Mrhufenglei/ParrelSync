@@ -40,7 +40,7 @@ https://github.com/Mrhufenglei/ParrelSync.git?path=/ParrelSync
 or by adding 
 
 ```
-"com.Mrhufenglei.parrelsync": "https://github.com/Mrhufenglei/ParrelSync.git?path=/ParrelSync"
+"com.mrhufenglei.parrelsync": "https://github.com/Mrhufenglei/ParrelSync.git?path=/ParrelSync"
 ``` 
 
 to the `Packages/manifest.json` file 
