@@ -35,7 +35,7 @@ https://github.com/Mrhufenglei/ParrelSync.git?path=/ParrelSync
 ```  
 
   
-![UPM_Image](https://github.com/Mrhufenglei/ParrelSync/raw/master/Images/UPM_1.png?raw=true) ![UPM_Image2](https://github.com/Mrhufenglei/ParrelSync/raw/master/Images/UPM_2.png?raw=true)
+![UPM_Image](https://raw.githubusercontent.com/Mrhufenglei/ParrelSync/master/Images/UPM_1.png?raw=true) ![UPM_Image2](https://github.com/Mrhufenglei/ParrelSync/raw/master/Images/UPM_2.png?raw=true)
   
 or by adding 
 
