@@ -22,7 +22,7 @@ ParrelSync is a Unity editor extension that allows users to test multiplayer gam
 1. Backup your project folder or use a version control system such as [Git](https://git-scm.com/) or [SVN](https://subversion.apache.org/)
 2. Download .unitypackage from the [latest release](https://github.com/Mrhufenglei/ParrelSync/releases) and import it to your project. 
 3.  ParrelSync should appreared in the menu item bar after imported
-![UpdateButtonInMenu](https://github.com/Mrhufenglei/ParrelSync/raw/master/Images/AfterImported.png)  
+![UpdateButtonInMenu](https://raw.githubusercontent.com/Mrhufenglei/ParrelSync/master/Images/AfterImported.png)  
 
 Check out the [Installation-and-Update](https://github.com/Mrhufenglei/ParrelSync/wiki/Installation-and-Update) page for more details.
 
@@ -41,7 +41,7 @@ https://github.com/Mrhufenglei/ParrelSync.git?path=/ParrelSync#v1.1.1
 or by adding 
 
 ```
-"com.mrhufenglei.parrelsync": "https://github.com/Mrhufenglei/ParrelSync.git?path=/ParrelSync"
+"com.magic.parrelsync": "https://github.com/Mrhufenglei/ParrelSync.git?path=/ParrelSync"
 ``` 
 
 to the `Packages/manifest.json` file 
