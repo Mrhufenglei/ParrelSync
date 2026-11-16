@@ -69,7 +69,9 @@ if (ClonesManager.IsClone()) {
 Check out [the doc](https://github.com/Mrhufenglei/ParrelSync/wiki/List-of-APIs) to view the complete API list.
 
 ## How does it work?
-For each clone instance, ParrelSync will make a copy of the original project folder and reference the ```Asset```, ```Packages``` and ```ProjectSettings``` folder back to the original project with [symbolic link](https://docs.microsoft.com/en-us/windows-server/administration/windows-commands/mklink). Other folders such as ```Library```, ```Temp```, and ```obj``` will remain independent for each clone project.
+For each clone instance, ParrelSync creates a project folder and handles its folders according to the settings in ```Project Settings > ParrelSync```. By default, ```Library``` and ```Packages``` are copied, while ```Assets```, ```ProjectSettings```, ```AutoBuild```, and ```LocalPackages``` reference the original project through [symbolic links](https://docs.microsoft.com/en-us/windows-server/administration/windows-commands/mklink). Folders can be added to either list, but a folder cannot be both copied and symbolically linked.
+
+Removing default folders can make a clone project unable to open correctly. Folders which do not exist in the original project are skipped when a clone is created.
 
 All clones are placed right next to the original project with suffix *```_clone_x```*, which will be something like this in the folder hierarchy. 
 ```

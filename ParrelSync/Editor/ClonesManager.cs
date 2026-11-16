@@ -71,6 +71,13 @@ namespace ParrelSync
         /// <returns></returns>
         public static Project CreateCloneFromPath(string sourceProjectPath)
         {
+            if (string.IsNullOrWhiteSpace(sourceProjectPath) || !Directory.Exists(sourceProjectPath))
+            {
+                Debug.LogError("Cannot clone project - provided source folder does not exist: " + sourceProjectPath);
+                return null;
+            }
+
+            sourceProjectPath = sourceProjectPath.Replace("\\", "/").TrimEnd('/');
             Project sourceProject = new Project(sourceProjectPath);
 
             string cloneProjectPath = null;
@@ -78,8 +85,7 @@ namespace ParrelSync
             //Find available clone suffix id
             for (int i = 0; i < MaxCloneProjectCount; i++)
             {
-                string originalProjectPath = ClonesManager.GetCurrentProject().projectPath;
-                string possibleCloneProjectPath = originalProjectPath + ClonesManager.CloneNameSuffix + "_" + i;
+                string possibleCloneProjectPath = sourceProject.projectPath + ClonesManager.CloneNameSuffix + "_" + i;
 
                 if (!Directory.Exists(possibleCloneProjectPath))
                 {
@@ -100,42 +106,62 @@ namespace ParrelSync
 
             ClonesManager.CreateProjectFolder(cloneProject);
 
-            //Copy Folders           
-            Debug.Log("Library copy: " + cloneProject.libraryPath);
-            ClonesManager.CopyDirectoryWithProgressBar(sourceProject.libraryPath, cloneProject.libraryPath,
-                "Cloning Project Library '" + sourceProject.name + "'. ");
-            Debug.Log("Packages copy: " + cloneProject.libraryPath);
-            ClonesManager.CopyDirectoryWithProgressBar(sourceProject.packagesPath, cloneProject.packagesPath,
-              "Cloning Project Packages '" + sourceProject.name + "'. ");
-
-
-            //Link Folders
-            ClonesManager.LinkFolders(sourceProject.assetPath, cloneProject.assetPath);
-            ClonesManager.LinkFolders(sourceProject.projectSettingsPath, cloneProject.projectSettingsPath);
-            ClonesManager.LinkFolders(sourceProject.autoBuildPath, cloneProject.autoBuildPath);
-            ClonesManager.LinkFolders(sourceProject.localPackages, cloneProject.localPackages);
-            
-            //Optional Link Folders
-            var optionalLinkPaths = Preferences.OptionalSymbolicLinkFolders.GetStoredValue();
-            var projectSettings = ParrelSyncProjectSettings.GetSerializedSettings();
-            var projectSettingsProperty = projectSettings.FindProperty("m_OptionalSymbolicLinkFolders");
-            if (projectSettingsProperty is { isArray: true, arrayElementType: "string" })
+            var copyFolderPaths = ParrelSyncProjectSettings.GetCopyFolders();
+            var symbolicLinkFolderPaths = ParrelSyncProjectSettings.GetSymbolicLinkFolders();
+            foreach (var duplicateFolderPath in symbolicLinkFolderPaths.Where(copyFolderPaths.Contains).ToList())
             {
-                for (var i = 0; i < projectSettingsProperty.arraySize; ++i)
-                {
-                    optionalLinkPaths.Add(projectSettingsProperty.GetArrayElementAtIndex(i).stringValue);
-                }
+                Debug.LogWarning("Folder is configured for both copy and symbolic link. Symbolic link is skipped: " + duplicateFolderPath);
+                symbolicLinkFolderPaths.Remove(duplicateFolderPath);
             }
-            foreach (var path in optionalLinkPaths)
-            {
-                var sourceOptionalPath = sourceProjectPath + path;
-                var cloneOptionalPath = cloneProjectPath + path;
-                LinkFolders(sourceOptionalPath, cloneOptionalPath);
-            }
+
+            CopyConfiguredFolders(sourceProject, cloneProject, copyFolderPaths);
+            LinkConfiguredFolders(sourceProject, cloneProject, symbolicLinkFolderPaths);
 
             ClonesManager.RegisterClone(cloneProject);
 
             return cloneProject;
+        }
+
+        private static void CopyConfiguredFolders(Project sourceProject, Project cloneProject, IEnumerable<string> folderPaths)
+        {
+            foreach (var folderPath in folderPaths)
+            {
+                var normalizedFolderPath = ParrelSyncProjectSettings.NormalizeFolderPath(folderPath);
+                if (string.IsNullOrEmpty(normalizedFolderPath))
+                    continue;
+
+                var sourceFolderPath = Path.Combine(sourceProject.projectPath, normalizedFolderPath);
+                if (!Directory.Exists(sourceFolderPath))
+                {
+                    Debug.LogWarning("Skipping copy because source folder does not exist: " + sourceFolderPath);
+                    continue;
+                }
+
+                var cloneFolderPath = Path.Combine(cloneProject.projectPath, normalizedFolderPath);
+                Debug.Log("Copying folder: " + sourceFolderPath + " -> " + cloneFolderPath);
+                CopyDirectoryWithProgressBar(sourceFolderPath, cloneFolderPath,
+                    "Cloning Project folder '" + normalizedFolderPath + "'. ");
+            }
+        }
+
+        private static void LinkConfiguredFolders(Project sourceProject, Project cloneProject, IEnumerable<string> folderPaths)
+        {
+            foreach (var folderPath in folderPaths)
+            {
+                var normalizedFolderPath = ParrelSyncProjectSettings.NormalizeFolderPath(folderPath);
+                if (string.IsNullOrEmpty(normalizedFolderPath))
+                    continue;
+
+                var sourceFolderPath = Path.Combine(sourceProject.projectPath, normalizedFolderPath);
+                if (!Directory.Exists(sourceFolderPath))
+                {
+                    Debug.LogWarning("Skipping symbolic link because source folder does not exist: " + sourceFolderPath);
+                    continue;
+                }
+
+                var cloneFolderPath = Path.Combine(cloneProject.projectPath, normalizedFolderPath);
+                LinkFolders(sourceFolderPath, cloneFolderPath);
+            }
         }
 
         /// <summary>
@@ -175,9 +201,10 @@ namespace ParrelSync
                 return;
             }
 
-            //Validate (and update if needed) the "Packages" folder before opening clone project to ensure the clone project will have the 
-            //same "compiling environment" as the original project
-            ValidateCopiedFoldersIntegrity.ValidateFolder(projectPath, GetOriginalProjectPath(), "Packages");
+            //Validate (and update if needed) the copied "Packages" folder before opening the clone project
+            //to ensure the clone project has the same compiling environment as the original project.
+            if (ParrelSyncProjectSettings.IsCopyFolderConfigured("Packages"))
+                ValidateCopiedFoldersIntegrity.ValidateFolder(projectPath, GetOriginalProjectPath(), "Packages");
 
             string fileName = GetApplicationPath();
             string args = "-projectPath \"" + projectPath + "\"";

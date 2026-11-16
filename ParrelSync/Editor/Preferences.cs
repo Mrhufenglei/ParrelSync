@@ -114,9 +114,8 @@ namespace ParrelSync
         public static BoolPreference AlsoCheckUnityLockFileStaPref = new BoolPreference("ParrelSync_CheckUnityLockFileOpenStatus", true);
 
         /// <summary>
-        /// A list of folders to create sybolic links for,
-        /// useful for data that lives outside of the assets folder
-        /// eg. Wwise project data
+        /// Legacy user preference retained to migrate existing optional symbolic link folders
+        /// into project settings.
         /// </summary>
         public static ListOfStringsPreference OptionalSymbolicLinkFolders = new ListOfStringsPreference("ParrelSync_OptionalSymbolicLinkFolders");
         
@@ -153,60 +152,10 @@ namespace ParrelSync
             }
             GUILayout.EndVertical();
 
-            GUILayout.BeginVertical("GroupBox");
-            GUILayout.Label("Optional Folders to Symbolically Link");
-            GUILayout.Space(5);
-
-            // cache the current value
-            List<string> optionalFolderPaths = OptionalSymbolicLinkFolders.GetStoredValue();
-            bool optionalFolderPathsAreDirty = false;
-            
-            // append a new row if full
-            if (optionalFolderPaths.Last() != "")
-            {
-                optionalFolderPaths.Add("");
-            }
-
-            var projectPath = ClonesManager.GetCurrentProjectPath();
-            for (int i = 0; i < optionalFolderPaths.Count; ++i)
-            {
-                GUILayout.BeginHorizontal();
-                EditorGUILayout.LabelField(optionalFolderPaths[i], EditorStyles.textField, GUILayout.Height(EditorGUIUtility.singleLineHeight));
-                if (GUILayout.Button("Select Folder", GUILayout.Width(100)))
-                {
-                    var result = EditorUtility.OpenFolderPanel("Select Folder to Symbolically Link...", "", "");
-                    if (result.Contains(projectPath))
-                    {
-                        optionalFolderPaths[i] = result.Replace(projectPath,"");
-                        optionalFolderPathsAreDirty = true;
-                    }
-                    else if( result != "")
-                    {
-                        Debug.LogWarning("Symbolic Link folder must be within the project directory");
-                    }
-                }
-                if (GUILayout.Button("Clear", GUILayout.Width(100)))
-                {
-                    optionalFolderPaths[i] = "";
-                    optionalFolderPathsAreDirty = true;
-                }
-                GUILayout.EndHorizontal();
-            }
-
-            // only set the preference if the value is marked dirty
-            if (optionalFolderPathsAreDirty)
-            {
-                optionalFolderPaths.RemoveAll(str=> str == "");
-                OptionalSymbolicLinkFolders.SetStoredValue(optionalFolderPaths);
-            }
-            
-            GUILayout.EndVertical();
-            
             if (GUILayout.Button("Reset to default"))
             {
                 AssetModPref.ClearValue();
                 AlsoCheckUnityLockFileStaPref.ClearValue();
-                OptionalSymbolicLinkFolders.ClearStoredValue();
                 Debug.Log("Editor preferences cleared");
             }
             GUILayout.EndVertical();

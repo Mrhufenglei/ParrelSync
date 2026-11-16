@@ -23,16 +23,22 @@ namespace ParrelSync
                 SessionState.SetBool(SessionStateKey, true);
                 if (!ClonesManager.IsClone()) { return; }
 
-                ValidateFolder(ClonesManager.GetCurrentProjectPath(), ClonesManager.GetOriginalProjectPath(), "Packages");
+                if (ParrelSyncProjectSettings.IsCopyFolderConfigured("Packages"))
+                    ValidateFolder(ClonesManager.GetCurrentProjectPath(), ClonesManager.GetOriginalProjectPath(), "Packages");
             }
         }
 
         public static void ValidateFolder(string targetRoot, string originalRoot, string folderName)
         {
             var targetFolderPath = Path.Combine(targetRoot, folderName);
-            var targetFolderHash = CreateMd5ForFolder(targetFolderPath);
-
             var originalFolderPath = Path.Combine(originalRoot, folderName);
+            if (!Directory.Exists(targetFolderPath) || !Directory.Exists(originalFolderPath))
+            {
+                Debug.LogWarning("ParrelSync: Skipping copied folder validation because a folder does not exist: " + folderName);
+                return;
+            }
+
+            var targetFolderHash = CreateMd5ForFolder(targetFolderPath);
             var originalFolderHash = CreateMd5ForFolder(originalFolderPath);
 
             if (targetFolderHash != originalFolderHash)
